@@ -1,0 +1,31 @@
+Замечания:
+- Нужно убрать дубли, если популярных мастеров у какого-то заказчика будет больше одного
+- А почему тут RANK не используешь?
+
+Ответ:
+Насколько понимаю, first_value выводит первое значение из патриции:
+
+https://www.sqlservertutorial.net/sql-server-window-functions/sql-server-first_value-function/
+The FIRST_VALUE() function is a window function that returns the first value in an ordered partition of a result set.
+
+Соответственно код ниже выводит первый и единственный (craftsma_id as top_craftsman_id) из патриции по T2.customer_id c упорядоченными по убывания кол-вами заказов, 
+сгруппированных по заказчикам и мастерам c упорядоченными по убывания кол-вами заказов в Таблице T3, которую я вяжу с T2 по customer_id.
+Наверное, поэтому не должно быть дублей.
+К сожалению, тестовые данные не позволяю это проверить.
+Если я не прав, поправьте меня. 
+ 
+first_value (top_craftsman_id) OVER(partition by T2.customer_id order by top_count_order desc)  as craftsman_id
+
+Решил использовать first_value для разнообразия. 
+Плюс в том, что не надо прописывать условия where rank =1. Могу и конструкцию с RANK заменить на first_value, если надо.
+
+Таблица T3:
+INNER JOIN (
+SELECT     -- Эта выборка поможет определить идентификатор самого популярного мастера ручной работы у заказчика. Эта выборка не делается в предыдущем запросе, так как нужна другая группировка. Для данных этой выборки можно применить оконную функцию, которая и покажет самую популярную категорию товаров у мастера
+ dd.customer_id AS customer_id_for_craftsman, 
+ dd.craftsman_id as top_craftsman_id, 
+ COUNT(dd.order_id) AS top_count_order
+ FROM dwh_delta AS dd
+ GROUP BY dd.customer_id, dd.craftsman_id
+ ORDER BY top_count_order DESC) AS T3 ON T2.customer_id = T3.customer_id_for_craftsman
+  
