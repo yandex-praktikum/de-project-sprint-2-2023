@@ -1,4 +1,4 @@
-'''
+<pre><code class="language-sql">
 -- Перенос данных в DWH (Шаг 3)
 /* создание таблицы tmp_sources с данными из всех источников */
 DROP TABLE IF EXISTS tmp_sources;
@@ -142,5 +142,5 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
   INSERT (product_id, craftsman_id, customer_id, order_created_date, order_completion_date, order_status, load_dttm)
   VALUES (t.product_id, t.craftsman_id, t.customer_id, t.order_created_date, t.order_completion_date, t.order_status, current_timestamp);
-'''
+</code></pre>
 
